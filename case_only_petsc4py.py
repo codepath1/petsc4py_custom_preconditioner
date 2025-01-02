@@ -409,7 +409,7 @@ def hou_gmres_para_pre(A,b,P,maxit):
             tmpvm_vm2=PETSc.Vec().createSeq(2)   
             tmpvm_vm2.setValues(0,vm/rho)  
             tmpvm_vm2.setValues(1,vm2/rho)   
-            J.append(tmpvm_vm2)  #J是全局的 
+            J.append(tmpvm_vm2) 
             
             my_setValue_mult(w,m+1,m,-J[m][1]) #w[m + 1] = -J[m][1] * w[m] 
             my_setValue_mult(w,m,m,np.conj(J[m][0]))#w[m] = np.conj(J[m][0]) * w[m] 
@@ -422,7 +422,7 @@ def hou_gmres_para_pre(A,b,P,maxit):
         print(v.norm())
         r_start,r_end = R.getOwnershipRange()
 
-        # 先生成一个v_astmp 与R的分区一致 用来组装
+   
         v_astmp= PETSc.Vec().createMPI(maxit,R.block_size,PETSc.COMM_WORLD)
 
         for kk in range(size):
@@ -431,8 +431,6 @@ def hou_gmres_para_pre(A,b,P,maxit):
 
         sct.scatter(v,v_astmp)   # v_astmp[:]=v[1:size()]
         
-        #然后实现R(:,m) = v_astmp(:);  二者分区是一致的
-        # 事实上R 是一个上三角矩阵 可以对行进行约束
         # R=(:m,m) = v_astmp(:m)
         v_astmp.assemble()
         v_local = v_astmp.getArray()
@@ -446,9 +444,7 @@ def hou_gmres_para_pre(A,b,P,maxit):
             R.setValues(local_rows[:len(v_local_indices)], [m], v_local[v_local_indices])
         R.assemble()
     
-    # R 组装好了  
-    # 组装w后 求解最小二乘问题
-    # w_b=w(1:m+1) 索引问题 不包含maxit 
+    # w_b=w(1:m+1) 
     
     w_b= PETSc.Vec().createMPI(maxit,R.block_size,PETSc.COMM_WORLD)
 
@@ -487,7 +483,7 @@ def hou_gmres_para_pre(A,b,P,maxit):
 
     x.axpy(1, additive)
     
-    ##最后的残差计算
+    
     ## rv=norm(inv(P)*(a*x-b))
     r1 = b.duplicate() 
     rv = b.duplicate()  
